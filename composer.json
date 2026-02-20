@@ -1,5 +1,6 @@
 {
     "name": "engvanntha/kardal-trace",
+    "version": "1.0.0",
     "description": "Cross-version request trace propagation for Laravel services",
     "type": "library",
     "license": "proprietary",
