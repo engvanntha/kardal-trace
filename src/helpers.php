@@ -4,6 +4,7 @@ use Kardal\Trace\Http\GuzzleTraceMiddleware;
 use Kardal\Trace\Support\CurlTrace;
 use Kardal\Trace\Support\TraceContext;
 use Kardal\Trace\Support\TraceIdGenerator;
+use Illuminate\Support\Facades\Log;
 
 if (!function_exists('trace_id')) {
     /**
@@ -91,5 +92,54 @@ if (!function_exists('trace_curl_apply')) {
     function trace_curl_apply($curlHandle, array $headerLines = [], $traceId = null, $headerName = null)
     {
         return CurlTrace::apply($curlHandle, $headerLines, $traceId, $headerName);
+    }
+}
+
+if (!function_exists('trace_log')) {
+    /**
+     * @param string $name
+     * @param string $message
+     * @param array $context
+     * @param string $level
+     * @param string|null $channel
+     * @return void
+     */
+    function trace_log($name, $message, array $context = [], $level = 'info', $channel = null)
+    {
+        $traceId = TraceContext::get();
+        if (!$traceId) {
+            $traceId = TraceIdGenerator::make();
+            TraceContext::set($traceId, 'trace_log');
+        }
+
+        $contextKey = config('trace.log_context_key', 'correlation_id');
+        $serviceKey = config('trace.log_service_key', 'service_name');
+        $context[$contextKey] = $traceId;
+        $context[$serviceKey] = $name;
+
+        if (is_string($channel) && trim($channel) !== '') {
+            $logger = Log::channel(trim($channel));
+            if (method_exists($logger, $level)) {
+                $logger->{$level}($message, $context);
+                return;
+            }
+
+            $logger->info($message, $context);
+            return;
+        }
+
+        if (method_exists(Log::getFacadeRoot(), 'withContext')) {
+            Log::withContext([
+                $contextKey => $traceId,
+                $serviceKey => $name,
+            ]);
+        }
+
+        if (method_exists(Log::getFacadeRoot(), $level)) {
+            Log::{$level}($message, $context);
+            return;
+        }
+
+        Log::info($message, $context);
     }
 }

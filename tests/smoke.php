@@ -88,6 +88,7 @@ class OutboundRequestStub
 class LogFacadeStub
 {
     public static $context = [];
+    public static $entries = [];
 
     public static function getFacadeRoot()
     {
@@ -102,6 +103,51 @@ class LogFacadeStub
     public static function withContext(array $context)
     {
         self::$context = array_merge(self::$context, $context);
+    }
+
+    public static function info($message, array $context = [])
+    {
+        self::$entries[] = ['level' => 'info', 'message' => $message, 'context' => $context];
+    }
+
+    public static function debug($message, array $context = [])
+    {
+        self::$entries[] = ['level' => 'debug', 'message' => $message, 'context' => $context];
+    }
+
+    public static function error($message, array $context = [])
+    {
+        self::$entries[] = ['level' => 'error', 'message' => $message, 'context' => $context];
+    }
+
+    public static function channel($name)
+    {
+        return new class($name) {
+            private $name;
+
+            public function __construct($name)
+            {
+                $this->name = $name;
+            }
+
+            public function info($message, array $context = [])
+            {
+                $context['channel'] = $this->name;
+                LogFacadeStub::$entries[] = ['level' => 'info', 'message' => $message, 'context' => $context];
+            }
+
+            public function debug($message, array $context = [])
+            {
+                $context['channel'] = $this->name;
+                LogFacadeStub::$entries[] = ['level' => 'debug', 'message' => $message, 'context' => $context];
+            }
+
+            public function error($message, array $context = [])
+            {
+                $context['channel'] = $this->name;
+                LogFacadeStub::$entries[] = ['level' => 'error', 'message' => $message, 'context' => $context];
+            }
+        };
     }
 }
 
@@ -209,5 +255,12 @@ $generatedResponse = $traceMiddleware->handle(new HttpRequestStub([]), function 
 });
 $generated = $generatedResponse->headers->get('X-Correlation-Id');
 $assert(is_string($generated) && $generated !== '', 'TraceMiddleware generates id when missing');
+
+TraceContext::set('trace-log-xyz', 'test');
+trace_log('portals', 'Portal user action', ['user_id' => 10], 'info');
+$entry = LogFacadeStub::$entries[count(LogFacadeStub::$entries) - 1];
+$assert($entry['message'] === 'Portal user action', 'trace_log writes message');
+$assert($entry['context']['correlation_id'] === 'trace-log-xyz', 'trace_log adds correlation id');
+$assert($entry['context']['service_name'] === 'portals', 'trace_log adds provided name');
 
 echo 'OK: ' . $assertions . " assertions passed\n";

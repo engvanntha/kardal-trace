@@ -27,6 +27,12 @@ class TraceLogProcessor
             $record['context'][$contextKey] = $traceId;
         }
 
+        $serviceKey = config('trace.log_service_key', 'service_name');
+        $serviceName = config('trace.service_name', config('app.name', 'app'));
+        if ($serviceName && !array_key_exists($serviceKey, $record['context'])) {
+            $record['context'][$serviceKey] = $serviceName;
+        }
+
         if (!isset($record['extra']) || !is_array($record['extra'])) {
             $record['extra'] = [];
         }

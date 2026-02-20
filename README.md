@@ -106,6 +106,20 @@ $headers = trace_curl_headers(['Accept: application/json']);
 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 ```
 
+Named log usage (example `portals`):
+
+```php
+trace_log('portals', 'User login request', [
+    'user_id' => $user->id,
+    'email' => $user->email,
+]);
+```
+
+This writes log context with:
+
+- `correlation_id`
+- `service_name` (value: `portals`)
+
 ## Config (optional)
 
 Publish config file:
