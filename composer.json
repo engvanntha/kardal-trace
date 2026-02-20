@@ -1,0 +1,43 @@
+{
+    "name": "engvanntha/kardal-trace",
+    "description": "Cross-version request trace propagation for Laravel services",
+    "type": "library",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Eng Vanntha"
+        }
+    ],
+    "support": {
+        "source": "https://github.com/engvanntha/kardal-trace"
+    },
+    "keywords": [
+        "laravel",
+        "trace",
+        "correlation-id",
+        "request-id",
+        "observability"
+    ],
+    "require": {
+        "php": "^7.1.3 || ^8.0",
+        "illuminate/support": "^5.8 || ^6.0 || ^7.0 || ^8.0 || ^9.0 || ^10.0 || ^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Kardal\\Trace\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "scripts": {
+        "test:smoke": "php tests/smoke.php"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Kardal\\Trace\\TraceServiceProvider"
+            ]
+        }
+    }
+}
